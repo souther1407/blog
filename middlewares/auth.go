@@ -1,6 +1,8 @@
 package middlewares
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -11,18 +13,25 @@ import (
 func GetAuth(next func(http.ResponseWriter, *http.Request, interfaces.ApiConfig, uuid.UUID), apiconfig interfaces.ApiConfig) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sessionStorage := apiconfig.CookieStore
-		session, err := sessionStorage.Get(r, "sessionId")
+		session, err := sessionStorage.Get(r, "sessionid")
 		if err != nil {
+			fmt.Println(err)
+			helpers.ResponseWithError(w, 401, "Unauthorized")
+			return
+		}
+		fmt.Println(session.Values)
+		if auth, ok := session.Values["authenticated"]; auth == false || !ok {
 			helpers.ResponseWithError(w, 401, "Unauthorized")
 			return
 		}
 
-		if session.Values["authenticated"] == false {
+		userId := session.Values["userid"].(string)
+		userUUID, err := uuid.Parse(userId)
+		if err != nil {
+			log.Println("Error parsing user id UUID", err)
 			helpers.ResponseWithError(w, 401, "Unauthorized")
 			return
 		}
-
-		userId := session.Values["userid"].(uuid.UUID)
-		next(w, r, apiconfig, userId)
+		next(w, r, apiconfig, userUUID)
 	}
 }

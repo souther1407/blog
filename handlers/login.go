@@ -51,7 +51,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, apiConfig interfaces.A
 	}
 
 	session.Values["authenticated"] = true
-	session.Values["userid"] = user.ID
+	session.Values["userid"] = user.ID.String()
 	err = session.Save(r, w)
 	if err != nil {
 		log.Println("Error setting sessionid", err)

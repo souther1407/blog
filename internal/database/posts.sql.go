@@ -52,3 +52,93 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (CreateP
 	)
 	return i, err
 }
+
+const deletePost = `-- name: DeletePost :exec
+DELETE FROM posts WHERE id = $1 AND author_id = $2
+`
+
+type DeletePostParams struct {
+	ID       uuid.UUID
+	AuthorID uuid.UUID
+}
+
+func (q *Queries) DeletePost(ctx context.Context, arg DeletePostParams) error {
+	_, err := q.db.ExecContext(ctx, deletePost, arg.ID, arg.AuthorID)
+	return err
+}
+
+const getLastPosts = `-- name: GetLastPosts :many
+SELECT p.id,p.title, p.created_at, a.name as author FROM posts p
+JOIN users a on a.id = p.author_id
+LIMIT $1
+`
+
+type GetLastPostsRow struct {
+	ID        uuid.UUID
+	Title     string
+	CreatedAt time.Time
+	Author    string
+}
+
+func (q *Queries) GetLastPosts(ctx context.Context, limit int32) ([]GetLastPostsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getLastPosts, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetLastPostsRow
+	for rows.Next() {
+		var i GetLastPostsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.CreatedAt,
+			&i.Author,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updatePost = `-- name: UpdatePost :one
+UPDATE posts SET
+updated_at = $2,
+title = $3,
+content = $4 
+WHERE id = $1
+RETURNING id, created_at, updated_at, title, content, author_id
+`
+
+type UpdatePostParams struct {
+	ID        uuid.UUID
+	UpdatedAt time.Time
+	Title     string
+	Content   string
+}
+
+func (q *Queries) UpdatePost(ctx context.Context, arg UpdatePostParams) (Post, error) {
+	row := q.db.QueryRowContext(ctx, updatePost,
+		arg.ID,
+		arg.UpdatedAt,
+		arg.Title,
+		arg.Content,
+	)
+	var i Post
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Title,
+		&i.Content,
+		&i.AuthorID,
+	)
+	return i, err
+}

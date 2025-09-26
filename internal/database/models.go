@@ -10,6 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type Config struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+	Value     string
+}
+
 type Post struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
