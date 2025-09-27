@@ -6,7 +6,7 @@ RETURNING id,created_at, updated_at, title;
 
 
 -- name: GetLastPosts :many
-SELECT p.id,p.title, p.created_at, a.name as author FROM posts p
+SELECT p.id,p.title, p.created_at,p.description, a.name as author FROM posts p
 JOIN users a on a.id = p.author_id
 LIMIT $1;
 
@@ -16,7 +16,8 @@ LIMIT $1;
 UPDATE posts SET
 updated_at = $2,
 title = $3,
-content = $4 
+content = $4,
+description = $5 
 WHERE id = $1
 RETURNING *;
 

@@ -8,11 +8,12 @@ import (
 )
 
 type Post struct {
-	Id        uuid.UUID `json:"id"`
-	Title     string    `json:"title,omitempty"`
-	Author    string    `json:"author,omitempty"`
-	Content   string    `json:"content,omitempty"`
-	CreatedAt time.Time `json:"created_at,omitempty"`
+	Id          uuid.UUID `json:"id"`
+	Title       string    `json:"title,omitempty"`
+	Author      string    `json:"author,omitempty"`
+	Content     string    `json:"content,omitempty"`
+	Description string    `json:"description,omitempty"`
+	CreatedAt   time.Time `json:"created_at,omitempty"`
 }
 
 func ParseDBPostToPost(post database.CreatePostRow) Post {
@@ -25,7 +26,7 @@ func ParseDBPostToPost(post database.CreatePostRow) Post {
 func ParseDBPostsToPost(posts []database.GetLastPostsRow) []Post {
 	parsedPosts := []Post{}
 	for _, p := range posts {
-		parsedPosts = append(parsedPosts, Post{Id: p.ID, Title: p.Title, Author: p.Author, CreatedAt: p.CreatedAt})
+		parsedPosts = append(parsedPosts, Post{Id: p.ID, Title: p.Title, Author: p.Author, CreatedAt: p.CreatedAt, Description: p.Description.String})
 	}
 	return parsedPosts
 }

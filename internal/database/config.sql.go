@@ -55,6 +55,24 @@ func (q *Queries) DeleteConfigParam(ctx context.Context, name string) error {
 	return err
 }
 
+const getConfigParamValue = `-- name: GetConfigParamValue :one
+SELECT id, created_at, updated_at, name, value FROM config
+WHERE name = $1
+`
+
+func (q *Queries) GetConfigParamValue(ctx context.Context, name string) (Config, error) {
+	row := q.db.QueryRowContext(ctx, getConfigParamValue, name)
+	var i Config
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.Value,
+	)
+	return i, err
+}
+
 const getConfigParams = `-- name: GetConfigParams :many
 SELECT id, created_at, updated_at, name, value FROM config
 `

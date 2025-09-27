@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -68,16 +69,17 @@ func (q *Queries) DeletePost(ctx context.Context, arg DeletePostParams) error {
 }
 
 const getLastPosts = `-- name: GetLastPosts :many
-SELECT p.id,p.title, p.created_at, a.name as author FROM posts p
+SELECT p.id,p.title, p.created_at,p.description, a.name as author FROM posts p
 JOIN users a on a.id = p.author_id
 LIMIT $1
 `
 
 type GetLastPostsRow struct {
-	ID        uuid.UUID
-	Title     string
-	CreatedAt time.Time
-	Author    string
+	ID          uuid.UUID
+	Title       string
+	CreatedAt   time.Time
+	Description sql.NullString
+	Author      string
 }
 
 func (q *Queries) GetLastPosts(ctx context.Context, limit int32) ([]GetLastPostsRow, error) {
@@ -93,6 +95,7 @@ func (q *Queries) GetLastPosts(ctx context.Context, limit int32) ([]GetLastPosts
 			&i.ID,
 			&i.Title,
 			&i.CreatedAt,
+			&i.Description,
 			&i.Author,
 		); err != nil {
 			return nil, err
@@ -112,16 +115,18 @@ const updatePost = `-- name: UpdatePost :one
 UPDATE posts SET
 updated_at = $2,
 title = $3,
-content = $4 
+content = $4,
+description = $5 
 WHERE id = $1
-RETURNING id, created_at, updated_at, title, content, author_id
+RETURNING id, created_at, updated_at, title, content, author_id, description
 `
 
 type UpdatePostParams struct {
-	ID        uuid.UUID
-	UpdatedAt time.Time
-	Title     string
-	Content   string
+	ID          uuid.UUID
+	UpdatedAt   time.Time
+	Title       string
+	Content     string
+	Description sql.NullString
 }
 
 func (q *Queries) UpdatePost(ctx context.Context, arg UpdatePostParams) (Post, error) {
@@ -130,6 +135,7 @@ func (q *Queries) UpdatePost(ctx context.Context, arg UpdatePostParams) (Post, e
 		arg.UpdatedAt,
 		arg.Title,
 		arg.Content,
+		arg.Description,
 	)
 	var i Post
 	err := row.Scan(
@@ -139,6 +145,7 @@ func (q *Queries) UpdatePost(ctx context.Context, arg UpdatePostParams) (Post, e
 		&i.Title,
 		&i.Content,
 		&i.AuthorID,
+		&i.Description,
 	)
 	return i, err
 }

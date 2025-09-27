@@ -8,6 +8,11 @@ RETURNING *;
 SELECT * FROM config;
 
 
+-- name: GetConfigParamValue :one
+SELECT * FROM config
+WHERE name = $1;
+
+
 -- name: UpdateConfigParam :one
 UPDATE config SET
 updated_at = $2,

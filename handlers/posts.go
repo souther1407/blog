@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"time"
@@ -19,9 +20,9 @@ type CreatePostBody struct {
 }
 
 type UpdatePostBody struct {
-	Id      uuid.UUID `json:"id"`
-	Title   string    `json:"title"`
-	Content string    `json:"content"`
+	Title       string `json:"title,omitempty"`
+	Content     string `json:"content,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 func CreatePostHandler(w http.ResponseWriter, r *http.Request, apiConfig interfaces.ApiConfig, userId uuid.UUID) {
@@ -63,10 +64,11 @@ func UpdatePostHandler(w http.ResponseWriter, r *http.Request, apiConfig interfa
 		return
 	}
 	updatedPost, err := apiConfig.DB.UpdatePost(r.Context(), database.UpdatePostParams{
-		ID:        postUUID,
-		UpdatedAt: time.Now().UTC(),
-		Title:     body.Title,
-		Content:   body.Content,
+		ID:          postUUID,
+		UpdatedAt:   time.Now().UTC(),
+		Title:       body.Title,
+		Content:     body.Content,
+		Description: sql.NullString{String: body.Description, Valid: body.Description != ""},
 	})
 
 	if err != nil {
@@ -75,7 +77,7 @@ func UpdatePostHandler(w http.ResponseWriter, r *http.Request, apiConfig interfa
 		return
 	}
 
-	helpers.ResponseWithJSON(w, 200, models.Post{Id: updatedPost.ID, Title: updatedPost.Title})
+	helpers.ResponseWithJSON(w, 200, models.Post{Id: updatedPost.ID, Title: updatedPost.Title, Description: updatedPost.Description.String})
 
 }
 

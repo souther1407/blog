@@ -5,6 +5,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,12 +20,13 @@ type Config struct {
 }
 
 type Post struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Title     string
-	Content   string
-	AuthorID  uuid.UUID
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Title       string
+	Content     string
+	AuthorID    uuid.UUID
+	Description sql.NullString
 }
 
 type User struct {
